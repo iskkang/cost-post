@@ -37,13 +37,14 @@ app.get('/api/tickets', async (req, res) => {
       pod: record.get('POD'),
       type: record.get('Type'),
       cost: record.get('Cost'),
-      time: record.get('t/Time'),
+      time: record.get('T/time'),
       route: record.get('Route'),
     }));
 
     res.json(tickets);  // 티켓 데이터 반환
   } catch (error) {
-    console.error('Airtable API error:', error);
+    console.error('Airtable API error:', error.message);
+    console.error('Airtable API stack:', error.stack);
     res.status(500).json({ error: '서버 요청 중 오류가 발생했습니다.' });
   }
 });
