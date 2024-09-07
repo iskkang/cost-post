@@ -23,7 +23,7 @@ app.get('/api/tickets', async (req, res) => {
   try {
     // Airtable에서 레코드 가져오기
     const records = await base('tcr').select({
-      filterByFormula,  // 필터 공식 사용
+      filterByFormula: filterFormula,  // 필터 공식을 직접 사용
       view: "Grid view"
     }).firstPage();
 
