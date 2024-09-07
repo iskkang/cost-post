@@ -1,7 +1,10 @@
 const express = require('express');
 const { fetchRecords } = require('./airtable/airtable'); // Airtable 모듈 가져오기
+const cors = require('cors'); 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(cors());
 
 // 루트 경로: 접속 성공 메시지 반환
 app.get('/', (req, res) => {
