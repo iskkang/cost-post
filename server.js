@@ -1,7 +1,11 @@
 const express = require('express');
 const { fetchRecords } = require('./airtable/airtable'); // Airtable 모듈 가져오기
-const cors = require('cors'); 
+const cors = require('cors');
+const Airtable = require('airtable');
 const app = express();
+const dotenv = require('dotenv');
+dotenv.config();
+
 const port = process.env.PORT || 3000;
 
 app.use(cors());
