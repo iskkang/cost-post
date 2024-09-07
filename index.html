@@ -3,57 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>운임 조회</title>
-    <!-- Bootstrap CDN -->
-    <!-- Custom CSS -->
+    <title>철도 티켓 가격 조회</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
 
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-size: 24px;
+            color: #0056b3;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin: 15px 0 5px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .autocomplete-items {
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            position: absolute;
+            width: calc(100% - 30px); /* 100% width minus padding */
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+        }
+
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .autocomplete-items div:hover {
+            background-color: #f1f1f1;
+        }
+
+        .result {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .result p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .result .highlight {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            input[type="text"] {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .result p {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">Ticket Checker</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="#">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Prices</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Contact</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <div class="container">
+        <h1>철도 티켓 가격 조회</h1>
 
-    <div class="container mt-5">
-        <h1 class="text-center mb-4 text-white">철도 티켓 가격 조회</h1>
+        <label for="departureInput">출발지</label>
+        <input type="text" id="departureInput" placeholder="출발지 입력" autocomplete="off">
 
-        <div class="form-group">
-            <label for="departureInput" class="text-white">출발지</label>
-            <input type="text" class="form-control" id="departureInput" placeholder="출발지 입력" autocomplete="off">
-        </div>
+        <label for="destinationInput">도착지</label>
+        <input type="text" id="destinationInput" placeholder="도착지 입력" autocomplete="off">
 
-        <div class="form-group">
-            <label for="destinationInput" class="text-white">도착지</label>
-            <input type="text" class="form-control" id="destinationInput" placeholder="도착지 입력" autocomplete="off">
-        </div>
+        <label for="typeInput">유형</label>
+        <input type="text" id="typeInput" placeholder="20 또는 40 입력" autocomplete="off">
 
-        <div class="form-group">
-            <label for="typeInput" class="text-white">유형</label>
-            <input type="text" class="form-control" id="typeInput" placeholder="20 또는 40 입력" autocomplete="off">
-        </div>
-
-        <button id="searchButton" class="btn btn-primary btn-block">가격 조회</button>
+        <button id="searchButton">가격 조회</button>
 
         <div id="autocomplete-list-pol" class="autocomplete-items"></div>
         <div id="autocomplete-list-pod" class="autocomplete-items"></div>
 
-        <div class="result mt-4 p-4 bg-light rounded">
+        <div class="result">
             <p id="priceDisplay"></p>
             <p id="typeDisplay"></p>
             <p id="timeDisplay"></p>
@@ -61,42 +171,100 @@
         </div>
     </div>
 
-    <!-- Custom JS -->
     <script>
+        const API_KEY = 'your_airtable_api_key'; // Airtable API Key
+        const BASE_ID = 'your_airtable_base_id'; // Airtable Base ID
+        const TABLE_NAME = 'Tickets'; // Airtable 테이블 이름
+
+        let debounceTimer; // 디바운스 타이머를 저장할 변수
+
+        // 디바운싱 함수
+        function debounce(func, delay) {
+            return function(...args) {
+                const context = this;
+                clearTimeout(debounceTimer); // 이전 타이머 제거
+                debounceTimer = setTimeout(() => func.apply(context, args), delay); // 새로운 타이머 시작
+            };
+        }
+
+        // 자동 완성 기능
+        function autocomplete(input, field, listId) {
+            input.addEventListener("input", debounce(function () {
+                const val = this.value;
+                if (!val) return false;
+
+                fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula=SEARCH("${val}", {${field}})`, {
+                    headers: {
+                        Authorization: `Bearer ${API_KEY}`,
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const autocompleteList = document.getElementById(listId);
+                    autocompleteList.innerHTML = ''; // 이전 자동 완성 목록 초기화
+
+                    data.records.forEach(record => {
+                        const suggestion = document.createElement("div");
+                        suggestion.innerHTML = `<strong>${record.fields[field].substr(0, val.length)}</strong>`;
+                        suggestion.innerHTML += record.fields[field].substr(val.length);
+                        suggestion.innerHTML += `<input type='hidden' value='${record.fields[field]}'>`;
+
+                        suggestion.addEventListener("click", function () {
+                            input.value = this.getElementsByTagName("input")[0].value;
+                            autocompleteList.innerHTML = '';
+                        });
+
+                        autocompleteList.appendChild(suggestion);
+                    });
+                })
+                .catch(error => console.error('에러 발생:', error));
+            }, 300)); // 300ms 후에 API 호출 (디바운스 적용)
+        }
+
+        // 출발지와 도착지에 대해 자동 완성 적용
+        autocomplete(document.getElementById('departureInput'), 'pol', 'autocomplete-list-pol'); // 출발지 자동 완성
+        autocomplete(document.getElementById('destinationInput'), 'pod', 'autocomplete-list-pod'); // 도착지 자동 완성
+
+        // Type 값 변환 및 검색 처리
         document.getElementById('searchButton').addEventListener('click', () => {
-    const departure = document.getElementById('departureInput').value;
-    const destination = document.getElementById('destinationInput').value;
-    let type = document.getElementById('typeInput').value;
+            const departure = document.getElementById('departureInput').value;
+            const destination = document.getElementById('destinationInput').value;
+            let type = document.getElementById('typeInput').value;
 
-    // Type 값 변환: 20 -> 20dv, 40 -> 40HQ
-    if (type === '20') {
-        type = '20dv';
-    } else if (type === '40') {
-        type = '40HQ';
-    }
-
-    // Fetch API로 서버에서 데이터를 가져옴
-    fetch(`/api/tickets?pol=${departure}&pod=${destination}&type=${type}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.length > 0) {
-                const ticket = data[0];
-                document.getElementById('priceDisplay').innerText = `가격: ${ticket.cost}원`;
-                document.getElementById('typeDisplay').innerText = `유형: ${ticket.type}`;
-                document.getElementById('timeDisplay').innerText = `시간: ${ticket.t_time}`;
-                document.getElementById('routeDisplay').innerText = `경로: ${ticket.route}`;
-            } else {
-                document.getElementById('priceDisplay').innerText = '해당 경로에 대한 티켓 가격을 찾을 수 없습니다.';
+            // Type 값 변환: 20 -> 20dv, 40 -> 40HQ
+            if (type === '20') {
+                type = '20dv';
+            } else if (type === '40') {
+                type = '40HQ';
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+
+            // 검색 API 호출
+            const formula = `AND({pol} = '${departure}', {pod} = '${destination}', {Type} = '${type}')`;
+
+            fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula=${encodeURIComponent(formula)}`, {
+                headers: {
+                    Authorization: `Bearer ${API_KEY}`,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.records.length > 0) {
+                    const record = data.records[0].fields;
+                    const price = record.cost;
+                    const time = record["t/Time"];
+                    const route = record.route;
+
+                    // 검색 결과 표시
+                    document.getElementById('priceDisplay').innerText = `가격: ${price}원`;
+                    document.getElementById('typeDisplay').innerText = `유형: ${type}`;
+                    document.getElementById('timeDisplay').innerText = `시간: ${time}`;
+                    document.getElementById('routeDisplay').innerText = `경로: ${route}`;
+                } else {
+                    document.getElementById('priceDisplay').innerText = '해당 경로에 대한 티켓 가격을 찾을 수 없습니다.';
+                }
+            })
+            .catch(error => console.error('에러 발생:', error));
         });
-});
     </script>
-    <!-- Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
