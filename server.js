@@ -1,58 +1,25 @@
 const express = require('express');
-const Airtable = require('airtable');
-const dotenv = require('dotenv');
-const path = require('path');
-
-// 환경 변수 설정
-dotenv.config();
-
+const { fetchRecords } = require('./airtable/airtable'); // Airtable 모듈 가져오기
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Airtable 설정
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
-const TABLE_NAME = 'tcr'; // Table Name: tcr
-
-
-// 정적 파일 제공 (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, 'public')));
-
-// 루트 경로에 대해 index.html 제공
+// 루트 경로: 접속 성공 메시지 반환
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.send('접속 성공');
 });
 
-
-// API 엔드포인트: Airtable에서 데이터를 가져오기
-app.get('/api/tickets', (req, res) => {
-    const pol = req.query.pol;  // 사용자가 입력한 출발지
-    const pod = req.query.pod;  // 사용자가 입력한 도착지
-    const type = req.query.type; // 사용자가 입력한 유형
-
-    base(TABLE_NAME).select({
-        filterByFormula: `AND({POL} = '${pol}', {POD} = '${pod}', {Type} = '${type}')`,
-        view: "Grid view"
-    }).firstPage((err, records) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ error: 'Airtable API error' });
-        }
-
-        // 검색된 레코드들을 배열로 전송
-        const results = records.map(record => ({
-            pol: record.get('POL'),
-            pod: record.get('POD'),
-            type: record.get('Type'),
-            cost: record.get('Cost'),
-            t_time: record.get('t/Time'),
-            route: record.get('Route')
-        }));
-
-        res.json(results);
-    });
+// Airtable 데이터 테스트 엔드포인트
+app.get('/api/test', async (req, res) => {
+  try {
+    // Airtable의 'tcr' 테이블에서 모든 데이터를 가져오는 테스트
+    const records = await fetchRecords('tcr', '');
+    res.json(records);  // 성공 시 데이터 반환
+  } catch (error) {
+    res.status(500).json({ error: 'Airtable API error' });
+  }
 });
 
-// 서버 시작
+// 서버 실행
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${port}`);
 });
