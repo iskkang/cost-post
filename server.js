@@ -53,6 +53,6 @@ app.get('/api/tickets', (req, res) => {
 });
 
 // 서버 시작
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", function () => {
     console.log(`Server running on http://localhost:${port}`);
 });
