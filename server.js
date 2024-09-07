@@ -17,13 +17,13 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process
 app.get('/api/tickets', async (req, res) => {
   const { pol, pod, type } = req.query;
 
-  // Airtable 필터 공식 (대소문자 무시)
+  // Airtable 필터 공식
   const filterFormula = `AND(LOWER({POL}) = LOWER('${pol}'), LOWER({POD}) = LOWER('${pod}'), {Type} = '${type}')`;
 
   try {
     // Airtable에서 레코드 가져오기
     const records = await base('tcr').select({
-      filterByFormula: filterFormula,  // 필터 공식을 직접 사용
+      filterByFormula: filterFormula,
       view: "Grid view"
     }).firstPage();
 
@@ -38,15 +38,13 @@ app.get('/api/tickets', async (req, res) => {
       pod: record.get('POD'),
       type: record.get('Type'),
       cost: record.get('Cost'),
-      time: record.get('T/Time'),  // 필드 이름 수정
+      time: record.get('T/Time'),
       route: record.get('Route'),
     }));
 
-    res.json(tickets);  // 필터된 데이터 반환
+    res.json(tickets);
   } catch (error) {
-    // 오류 메시지 출력
     console.error('Airtable API error:', error.message);
-    console.error('Airtable API stack:', error.stack);
     res.status(500).json({ error: 'Airtable API 요청 중 오류가 발생했습니다.', details: error.message });
   }
 });
