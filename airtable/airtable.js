@@ -13,8 +13,8 @@ const fetchRecords = async (table, filterFormula) => {
     const records = await base(table).select({
       filterByFormula: filterFormula,
       view: "Grid view"
-    }).firstPage();
-
+    }).all();  // Changed from firstPage() to all()
+    
     return records.map(record => ({
       id: record.id,
       fields: record.fields
