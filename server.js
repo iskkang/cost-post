@@ -17,6 +17,12 @@ const TABLE_NAME = 'tcr'; // Table Name: tcr
 // 정적 파일 제공 (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 루트 경로에 대해 index.html 제공
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+
 // API 엔드포인트: Airtable에서 데이터를 가져오기
 app.get('/api/tickets', (req, res) => {
     const pol = req.query.pol;  // 사용자가 입력한 출발지
