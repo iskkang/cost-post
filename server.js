@@ -27,6 +27,11 @@ app.get('/api/tickets', async (req, res) => {
       view: "Grid view"
     }).firstPage();
 
+    // 데이터가 없을 경우 처리
+    if (records.length === 0) {
+      return res.status(404).json({ error: '해당 조건에 맞는 데이터가 없습니다.' });
+    }
+
     const tickets = records.map(record => ({
       pol: record.get('POL'),
       pod: record.get('POD'),
@@ -39,7 +44,7 @@ app.get('/api/tickets', async (req, res) => {
     res.json(tickets);  // 티켓 데이터 반환
   } catch (error) {
     console.error('Airtable API error:', error);
-    res.status(500).json({ error: 'Airtable API 요청 중 오류가 발생했습니다.' });
+    res.status(500).json({ error: '서버 요청 중 오류가 발생했습니다.' });
   }
 });
 
