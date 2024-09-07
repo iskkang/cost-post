@@ -17,8 +17,8 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process
 app.get('/api/tickets', async (req, res) => {
   const { pol, pod, type } = req.query;
 
-  // Airtable 필터 공식 (출발지, 도착지, 타입에 따른 필터)
-  const filterFormula = `AND({POL} = '${pol}', {POD} = '${pod}', {Type} = '${type}')`;
+  // Airtable 필터 공식 (대소문자 무시)
+  const filterFormula = `AND(LOWER({POL}) = LOWER('${pol}'), LOWER({POD}) = LOWER('${pod}'), {Type} = '${type}')`;
 
   try {
     // Airtable에서 레코드 가져오기
