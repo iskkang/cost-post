@@ -10,9 +10,6 @@ const port = process.env.PORT || 3000;
 // CORS 설정
 app.use(cors());
 
-// Airtable 설정
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
-
 // Airtable 데이터 테스트 엔드포인트
 app.get('/api/test', async (req, res) => {
   try {
