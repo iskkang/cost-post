@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const Airtable = require('airtable');
+const { fetchRecords } = require('./airtable'); 
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -29,31 +29,18 @@ app.get('/api/tickets', async (req, res) => {
   const { pol, pod, type } = req.query;
 
   // Airtable 필터 공식
-  const filterFormula = `AND(LOWER({POL}) = LOWER('${pol}'), LOWER({POD}) = LOWER('${pod}'), {Type} = '${type}')`;
+  const filterFormula = `AND({POL} = '${pol}', {POD} = '${pod}', {Type} = '${type}')`;
 
   try {
-    // Airtable에서 레코드 가져오기
-    const records = await base('tcr').select({
-      filterByFormula: filterFormula,
-      view: "Grid view"
-    }).firstPage();
+    // fetchRecords를 사용하여 Airtable 데이터 조회
+    const records = await fetchRecords('tcr', filterFormula);
 
     // 데이터가 없을 경우 처리
     if (records.length === 0) {
       return res.status(404).json({ error: '해당 조건에 맞는 데이터가 없습니다.' });
     }
 
-    // 레코드를 매핑하여 필요한 데이터 반환
-    const tickets = records.map(record => ({
-      pol: record.get('POL'),
-      pod: record.get('POD'),
-      type: record.get('Type'),
-      cost: record.get('Cost'),
-      time: record.get('T/Time'),
-      route: record.get('Route'),
-    }));
-
-    res.json(tickets);
+    res.json(records);  // 조회된 데이터 반환
   } catch (error) {
     console.error('Airtable API error:', error.message);
     res.status(500).json({ error: 'Airtable API 요청 중 오류가 발생했습니다.', details: error.message });
