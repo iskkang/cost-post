@@ -7,61 +7,40 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// CORS 설정
 app.use(cors());
 
-// Airtable 데이터 테스트 엔드포인트
 app.get('/api/test', async (req, res) => {
   try {
-    // Airtable의 'tcr' 테이블에서 모든 데이터를 가져오는 테스트
     const records = await fetchRecords('tcr', '');
-    res.json(records);  // 성공 시 데이터 반환
+    res.json(records);
   } catch (error) {
-    res.status(500).json({ error: 'Airtable API error' });
+    console.error('Airtable API error:', error);
+    res.status(500).json({ error: 'Airtable API error', details: error.message });
   }
 });
 
-// /api/tickets 엔드포인트 추가
 app.get('/api/tickets', async (req, res) => {
   const { pol, pod, type } = req.query;
-
-  // 쿼리 파라미터 로그 추가
   console.log('Received Query Parameters:', { pol, pod, type });
 
-  // Airtable 필터 공식 (대소문자 구분 없이 검색)
-  const filterFormula = `AND(LOWER({POL}) = LOWER('${pol}'), LOWER({POD}) = LOWER('${pod}'), {Type} = '${type}')`;
+  if (!pol || !pod || !type) {
+    return res.status(400).json({ error: '모든 쿼리 파라미터(pol, pod, type)가 필요합니다.' });
+  }
+
+  const filterFormula = `AND(LOWER({POL}) = LOWER("${pol}"), LOWER({POD}) = LOWER("${pod}"), {Type} = "${type}")`;
 
   try {
-    // Airtable 데이터 조회
     const records = await fetchRecords('tcr', filterFormula);
-
-    // 데이터가 없을 경우 처리
     if (records.length === 0) {
       return res.status(404).json({ error: '해당 조건에 맞는 데이터가 없습니다.' });
     }
-
-    // 조회된 데이터 반환
     res.json(records);
   } catch (error) {
-    console.error('Airtable API error:', error.message);
+    console.error('Airtable API error:', error);
     res.status(500).json({ error: 'Airtable API 요청 중 오류가 발생했습니다.', details: error.message });
   }
 });
 
-// 테스트용 /api/test 엔드포인트 추가 (데이터 조회 확인)
-app.get('/api/test', async (req, res) => {
-  try {
-    // 필터링 없이 전체 데이터를 가져오는 예시
-    const records = await fetchRecords('tcr', '');
-
-    res.json(records);
-  } catch (error) {
-    console.error('Airtable API error:', error.message);
-    res.status(500).json({ error: 'Airtable API 요청 중 오류가 발생했습니다.', details: error.message });
-  }
-});
-
-// 서버 시작
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
