@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { fetchRecords } = require('./airtable'); 
+const { fetchRecords } = require('./airtable/airtable.js'); 
 const dotenv = require('dotenv');
 dotenv.config();
 
