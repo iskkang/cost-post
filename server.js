@@ -13,6 +13,17 @@ app.use(cors());
 // Airtable 설정
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
 
+// Airtable 데이터 테스트 엔드포인트
+app.get('/api/test', async (req, res) => {
+  try {
+    // Airtable의 'tcr' 테이블에서 모든 데이터를 가져오는 테스트
+    const records = await fetchRecords('tcr', '');
+    res.json(records);  // 성공 시 데이터 반환
+  } catch (error) {
+    res.status(500).json({ error: 'Airtable API error' });
+  }
+});
+
 // /api/tickets 엔드포인트 추가
 app.get('/api/tickets', async (req, res) => {
   const { pol, pod, type } = req.query;
