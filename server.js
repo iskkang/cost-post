@@ -80,49 +80,17 @@ app.get('/api/tracing', async (req, res) => {
     return res.status(400).json({ error: 'BL 번호가 필요합니다.' });
   }
 
+ app.get('/api/tracing', async (req, res) => {
   try {
-    // tracing 테이블에서 BL 번호로 레코드 검색
-    const filterFormula = `{BL} = '${BL}'`;
-    const records = await fetchRecords('tracing', filterFormula); // tracing 테이블에서 검색
+    // tracing 테이블의 모든 데이터를 가져옴 (필터 없이)
+    const records = await fetchRecords('tracing', ''); // 필터 없이 모든 데이터를 가져옴
 
     if (records.length === 0) {
-      return res.status(404).json({ error: '해당 BL 번호에 대한 정보를 찾을 수 없습니다.' });
+      return res.status(404).json({ error: 'Tracing 테이블에 데이터가 없습니다.' });
     }
 
-    const tracingData = records[0].fields;
-    const currentCity = tracingData['Current'];
-    const podCity = tracingData['POD'];
-
-    // 도시 좌표 가져오기
-    const currentCityCoords = await getCityCoordinates(currentCity);
-    if (!currentCityCoords) {
-      throw new Error('Failed to get coordinates for Current city');
-    }
-
-    const podCityCoords = await getCityCoordinates(podCity);
-    if (!podCityCoords) {
-      throw new Error('Failed to get coordinates for POD city');
-    }
-
-    // 거리 계산
-    const distance = calculateDistance(currentCityCoords, podCityCoords);
-
-    res.json({
-      schedule: {
-        BL: tracingData['BL'],
-        Client: tracingData['Client'],
-        POL: tracingData['POL'],
-        POD: tracingData['POD'],
-        ETD: tracingData['ETD'],
-        ETA: tracingData['ETA']
-      },
-      currentInfo: {
-        Current: currentCity,
-        Status: tracingData['Status'],
-        coordinates: currentCityCoords,
-        distanceToPOD: distance
-      }
-    });
+    // tracing 테이블의 데이터를 그대로 응답
+    res.json(records);
   } catch (error) {
     console.error('Tracing API error:', error);
     res.status(500).json({ error: 'Tracing 데이터 조회 중 오류가 발생했습니다.' });
