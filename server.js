@@ -82,7 +82,7 @@ app.get('/api/tracing', async (req, res) => {
 
   try {
     const filterFormula = `{BL} = '${BL}'`;
-    const records = await fetchRecords('Tracing', filterFormula);
+    const records = await fetchRecords('tracing', filterFormula);
     
     if (records.length === 0) {
       return res.status(404).json({ error: '해당 BL 번호에 대한 정보를 찾을 수 없습니다.' });
