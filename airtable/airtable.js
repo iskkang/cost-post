@@ -10,11 +10,11 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process
 // 데이터 조회 함수
 const fetchRecords = async (table, filterFormula) => {
   try {
+    // 필터가 없는 경우 모든 레코드를 가져오기
+    const selectOptions = filterFormula ? { filterByFormula: filterFormula, view: "Grid view" } : { view: "Grid view" };
+    
     // Airtable에서 레코드 선택
-    const records = await base(table).select({
-      filterByFormula: filterFormula,  // 필터 공식 적용
-      view: "Grid view"  // 뷰 선택
-    }).all();  // 모든 페이지 데이터를 한 번에 조회
+    const records = await base(table).select(selectOptions).all();  // 모든 페이지 데이터를 한 번에 조회
 
     // 결과를 id와 fields로 매핑하여 반환
     return records.map(record => ({
