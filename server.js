@@ -52,6 +52,27 @@ app.get('/api/tickets', async (req, res) => {
   }
 });
 
+app.get('/api/autocomplete', async (req, res) => {
+  const { query, field } = req.query;
+  
+  if (!query || !field) {
+    return res.status(400).json({ error: '쿼리와 필드 파라미터가 필요합니다.' });
+  }
+
+  try {
+    let filterFormula = `SEARCH(LOWER("${query}"), LOWER({${field}})) > 0`;
+    const records = await fetchRecords('tcr', filterFormula);
+    
+    // 중복 제거 및 최대 5개 결과 반환
+    const suggestions = [...new Set(records.map(record => record.fields[field]))].slice(0, 5);
+    
+    res.json(suggestions);
+  } catch (error) {
+    console.error('Autocomplete API error:', error);
+    res.status(500).json({ error: '자동완성 데이터 조회 중 오류가 발생했습니다.' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   console.log('Environment variables:');
