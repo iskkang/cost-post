@@ -79,8 +79,14 @@ app.get('/api/tracing', async (req, res) => {
   }
 
   try {
+    console.log(`BL 번호로 레코드 검색: ${BL}`);
+
+    // tracing 테이블에서 BL 번호로 레코드 검색
     const filterFormula = `{BL} = '${BL}'`;
+    console.log(`Filter formula: ${filterFormula}`);
+    
     const records = await fetchRecords('tracing', filterFormula);
+    console.log(`Records fetched: ${records.length}`);
 
     if (records.length === 0) {
       return res.status(404).json({ error: '해당 BL 번호에 대한 정보를 찾을 수 없습니다.' });
@@ -90,10 +96,24 @@ app.get('/api/tracing', async (req, res) => {
     const currentCity = tracingData['Current'];
     const podCity = tracingData['POD'];
 
-    const currentCityCoords = await getCityCoordinates(currentCity);
-    const podCityCoords = await getCityCoordinates(podCity);
+    console.log(`Current City: ${currentCity}, POD: ${podCity}`);
 
+    // 도시 좌표 가져오기
+    const currentCityCoords = await getCityCoordinates(currentCity);
+    if (!currentCityCoords) {
+      console.log('Current city 좌표를 찾을 수 없음');
+      throw new Error('Failed to get coordinates for Current city');
+    }
+
+    const podCityCoords = await getCityCoordinates(podCity);
+    if (!podCityCoords) {
+      console.log('POD city 좌표를 찾을 수 없음');
+      throw new Error('Failed to get coordinates for POD city');
+    }
+
+    // 거리 계산
     const distance = calculateDistance(currentCityCoords, podCityCoords);
+    console.log(`Distance to POD: ${distance} km`);
 
     res.json({
       schedule: {
@@ -113,7 +133,7 @@ app.get('/api/tracing', async (req, res) => {
     });
   } catch (error) {
     console.error('Tracing API error:', error);
-    res.status(500).json({ error: 'Tracing 데이터 조회 중 오류가 발생했습니다.' });
+    res.status(500).json({ error: 'Tracing 데이터 조회 중 오류가 발생했습니다.', details: error.message });
   }
 });
 
