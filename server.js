@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { fetchRecords } = require('./airtable/airtable'); 
 const dotenv = require('dotenv');
+const axios = require('axios'); // axios 임포트
 dotenv.config();
 
 const app = express();
@@ -177,11 +178,29 @@ function calculateDistance(coord1, coord2) {
   const R = 6371; // 지구의 반경 (km)
   const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180;
   const dLon = (coord2.longitude - coord1.longitude) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
             Math.cos(coord1.latitude * Math.PI / 180) * Math.cos(coord2.latitude * Math.PI / 180) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c); // 거리 계산 후 반환
+}
+
+// 도시 좌표 가져오기 함수
+async function getCityCoordinates(cityName) {
+  try {
+    const response = await axios.get(`https://nominatim.openstreetmap.org/search?city=${cityName}&format=json&limit=1`);
+    if (response.data.length > 0) {
+      return {
+        latitude: parseFloat(response.data[0].lat),
+        longitude: parseFloat(response.data[0].lon)
+      };
+    }
+    console.log(`City not found: ${cityName}`);
+    return null; // 도시를 찾지 못한 경우
+  } catch (error) {
+    console.error('Error getting city coordinates:', error);
+    throw new Error('Geocoding service unavailable');
+  }
 }
 
 // 서버 실행
