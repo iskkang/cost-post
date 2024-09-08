@@ -188,18 +188,22 @@ function calculateDistance(coord1, coord2) {
 // 도시 좌표 가져오기 함수
 async function getCityCoordinates(cityName) {
   try {
+    console.log(`Fetching coordinates for city: ${cityName}`);
     const response = await axios.get(`https://nominatim.openstreetmap.org/search?city=${cityName}&format=json&limit=1`);
+
     if (response.data.length > 0) {
       return {
         latitude: parseFloat(response.data[0].lat),
         longitude: parseFloat(response.data[0].lon)
       };
     }
+
     console.log(`City not found: ${cityName}`);
     return null; // 도시를 찾지 못한 경우
   } catch (error) {
-    console.error('Error getting city coordinates:', error);
-    throw new Error('Geocoding service unavailable');
+    console.error(`Error getting city coordinates for ${cityName}:`, error.response ? error.response.data : error.message);
+    // API 호출 실패 시 구체적인 이유를 로깅
+    throw new Error('Geocoding service unavailable. Please try again later or check API limits.');
   }
 }
 
