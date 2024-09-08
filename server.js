@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const { fetchRecords } = require('./airtable/airtable'); 
 const dotenv = require('dotenv');
-const axios = require('axios'); // axios 임포트
 dotenv.config();
 
 const app = express();
@@ -94,27 +93,6 @@ app.get('/api/tracing', async (req, res) => {
     }
 
     const tracingData = records[0].fields;
-    const currentCity = tracingData['Current'];
-    const podCity = tracingData['POD'];
-
-    console.log(`Current City: ${currentCity}, POD: ${podCity}`);
-
-    // 도시 좌표 가져오기
-    const currentCityCoords = await getCityCoordinates(currentCity);
-    if (!currentCityCoords) {
-      console.log('Current city 좌표를 찾을 수 없음');
-      throw new Error('Failed to get coordinates for Current city');
-    }
-
-    const podCityCoords = await getCityCoordinates(podCity);
-    if (!podCityCoords) {
-      console.log('POD city 좌표를 찾을 수 없음');
-      throw new Error('Failed to get coordinates for POD city');
-    }
-
-    // 거리 계산
-    const distance = calculateDistance(currentCityCoords, podCityCoords);
-    console.log(`Distance to POD: ${distance} km`);
 
     res.json({
       schedule: {
@@ -126,10 +104,8 @@ app.get('/api/tracing', async (req, res) => {
         ETA: tracingData['ETA']
       },
       currentInfo: {
-        Current: currentCity,
+        Current: tracingData['Current'],
         Status: tracingData['Status'],
-        coordinates: currentCityCoords,
-        distanceToPOD: distance
       }
     });
   } catch (error) {
@@ -172,40 +148,6 @@ app.get('/api/tcr', async (req, res) => {
     res.status(500).json({ error: 'TCR 데이터 조회 중 오류가 발생했습니다.' });
   }
 });
-
-// 거리 계산 함수 (Haversine 공식 사용)
-function calculateDistance(coord1, coord2) {
-  const R = 6371; // 지구의 반경 (km)
-  const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180;
-  const dLon = (coord2.longitude - coord1.longitude) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(coord1.latitude * Math.PI / 180) * Math.cos(coord2.latitude * Math.PI / 180) * 
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c); // 거리 계산 후 반환
-}
-
-// 도시 좌표 가져오기 함수
-async function getCityCoordinates(cityName) {
-  try {
-    console.log(`Fetching coordinates for city: ${cityName}`);
-    const response = await axios.get(`https://nominatim.openstreetmap.org/search?city=${cityName}&format=json&limit=1`);
-
-    if (response.data.length > 0) {
-      return {
-        latitude: parseFloat(response.data[0].lat),
-        longitude: parseFloat(response.data[0].lon)
-      };
-    }
-
-    console.log(`City not found: ${cityName}`);
-    return null; // 도시를 찾지 못한 경우
-  } catch (error) {
-    console.error(`Error getting city coordinates for ${cityName}:`, error.response ? error.response.data : error.message);
-    // API 호출 실패 시 구체적인 이유를 로깅
-    throw new Error('Geocoding service unavailable. Please try again later or check API limits.');
-  }
-}
 
 // 서버 실행
 app.listen(port, () => {
