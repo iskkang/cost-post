@@ -74,7 +74,6 @@ app.get('/api/tracing', async (req, res) => {
 // 도시 좌표 가져오기 (Nominatim API 사용)
 async function getCoordinates(cityName) {
   try {
-    // 인코딩 제거
     const cleanCityName = cityName.trim();  // 도시 이름 정제 (인코딩 제거)
     
     const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${cleanCityName}&format=json&limit=1`;
@@ -82,7 +81,11 @@ async function getCoordinates(cityName) {
     // Nominatim API 요청 URL을 콘솔에 출력
     console.log(`Nominatim API 요청 URL: ${nominatimUrl}`);
 
-    const response = await axios.get(nominatimUrl);
+    const response = await axios.get(nominatimUrl, {
+      headers: {
+        'User-Agent': 'YourAppName/1.0 (your.email@example.com)',  // User-Agent 헤더 추가
+      }
+    });
 
     if (response.data && response.data.length > 0) {
       const { lat, lon } = response.data[0];
