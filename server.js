@@ -10,6 +10,25 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 
+//도시좌표가져오기
+async function getCoordinates(cityName) {
+  try {
+    const cleanCityName = encodeURIComponent(cityName.trim()); // 도시 이름 정제 및 인코딩
+    const response = await axios.get(`https://nominatim.openstreetmap.org/search?q=${cleanCityName}&format=json&limit=1`);
+
+    if (response.data && response.data.length > 0) {
+      const { lat, lon } = response.data[0];
+      return { latitude: parseFloat(lat), longitude: parseFloat(lon) };
+    }
+
+    console.log(`도시 좌표를 찾지 못함: ${cityName}`);
+    return null; // 좌표를 찾지 못한 경우
+  } catch (error) {
+    console.error('Nominatim API error:', error);
+    return null;
+  }
+}
+
 // Test endpoint
 app.get('/api/test', async (req, res) => {
   console.log('Test endpoint hit');
@@ -166,24 +185,6 @@ app.get('/api/tcr', async (req, res) => {
   }
 });
 
-// 도시 좌표 가져오기 (Nominatim API 사용)
-async function getCoordinates(cityName) {
-  try {
-    const cleanCityName = encodeURIComponent(cityName.trim()); // 도시 이름 정제 및 인코딩
-    const response = await axios.get(`https://nominatim.openstreetmap.org/search?q=${cleanCityName}&format=json&limit=1`);
-
-    if (response.data && response.data.length > 0) {
-      const { lat, lon } = response.data[0];
-      return { latitude: parseFloat(lat), longitude: parseFloat(lon) };
-    }
-
-    console.log(`도시 좌표를 찾지 못함: ${cityName}`);
-    return null; // 좌표를 찾지 못한 경우
-  } catch (error) {
-    console.error('Nominatim API error:', error);
-    return null;
-  }
-}
 
 // 서버 실행
 app.listen(port, () => {
