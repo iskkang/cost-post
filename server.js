@@ -1,12 +1,12 @@
 const express = require('express');
 const cors = require('cors');
-const { fetchRecords } = require('./airtable/airtable'); 
+const axios = require('axios'); // axios는 API 요청을 위해 필요합니다.
+const { fetchRecords } = require('./airtable/airtable');
 const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN;
 
 app.use(cors());
 
@@ -94,7 +94,20 @@ app.get('/api/tracing', async (req, res) => {
     }
 
     const tracingData = records[0].fields;
+    const currentCity = tracingData['Current'];  // 현재 도시 이름 가져오기
 
+    if (!currentCity) {
+      return res.status(404).json({ error: '현재 위치 정보가 없습니다.' });
+    }
+
+    // 현재 도시 이름을 사용해 좌표 가져오기 (Nominatim API)
+    const coordinates = await getCoordinates(currentCity);
+
+    if (!coordinates) {
+      return res.status(404).json({ error: '좌표를 찾을 수 없습니다.' });
+    }
+
+    // BL 정보와 좌표 정보를 함께 반환
     res.json({
       schedule: {
         BL: tracingData['BL'],
@@ -107,6 +120,7 @@ app.get('/api/tracing', async (req, res) => {
       currentInfo: {
         Current: tracingData['Current'],
         Status: tracingData['Status'],
+        coordinates: coordinates   // 좌표 추가
       }
     });
   } catch (error) {
@@ -150,61 +164,27 @@ app.get('/api/tcr', async (req, res) => {
   }
 });
 
+// Nominatim을 통해 도시 좌표를 가져오는 함수
 async function getCoordinates(cityName) {
   try {
-    const response = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(cityName)}.json?access_token=${MAPBOX_TOKEN}`);
-    
-    if (response.data.features && response.data.features.length > 0) {
-      const [longitude, latitude] = response.data.features[0].geometry.coordinates;
-      return { latitude, longitude };
+    const response = await axios.get(`https://nominatim.openstreetmap.org/search`, {
+      params: {
+        q: cityName,
+        format: 'json',
+        limit: 1
+      }
+    });
+
+    if (response.data && response.data.length > 0) {
+      const { lat, lon } = response.data[0];
+      return { latitude: parseFloat(lat), longitude: parseFloat(lon) };
     }
-    
     return null; // 좌표를 찾지 못한 경우
   } catch (error) {
-    console.error('Mapbox API error:', error);
+    console.error('Nominatim API error:', error);
     return null;
   }
 }
-
-// 새로운 /api/coord 엔드포인트
-app.get('/api/coord', async (req, res) => {
-  const { BL } = req.query;
-  
-  if (!BL) {
-    return res.status(400).json({ error: 'BL 번호가 필요합니다.' });
-  }
-
-  try {
-    const filterFormula = `{BL} = '${BL}'`;
-    const records = await fetchRecords('tracing', filterFormula);
-
-    if (records.length === 0) {
-      return res.status(404).json({ error: '해당 BL 번호에 대한 정보를 찾을 수 없습니다.' });
-    }
-
-    const tracingData = records[0].fields;
-    const currentCity = tracingData['Current'];
-
-    if (!currentCity) {
-      return res.status(404).json({ error: '현재 위치 정보가 없습니다.' });
-    }
-
-    const coordinates = await getCoordinates(currentCity);
-
-    if (!coordinates) {
-      return res.status(404).json({ error: '좌표를 찾을 수 없습니다.' });
-    }
-
-    res.json({
-      ...coordinates,
-      city: currentCity,
-      status: tracingData['Status']
-    });
-  } catch (error) {
-    console.error('Coord API error:', error);
-    res.status(500).json({ error: '좌표 데이터 조회 중 오류가 발생했습니다.', details: error.message });
-  }
-});
 
 // 서버 실행
 app.listen(port, () => {
