@@ -84,10 +84,7 @@ app.get('/api/tracing', async (req, res) => {
 
     // tracing 테이블에서 BL 번호로 레코드 검색
     const filterFormula = `{BL} = '${BL}'`;
-    console.log(`Filter formula: ${filterFormula}`);
-    
     const records = await fetchRecords('tracing', filterFormula);
-    console.log(`Records fetched: ${records.length}`);
 
     if (records.length === 0) {
       return res.status(404).json({ error: '해당 BL 번호에 대한 정보를 찾을 수 없습니다.' });
@@ -100,12 +97,17 @@ app.get('/api/tracing', async (req, res) => {
       return res.status(404).json({ error: '현재 위치 정보가 없습니다.' });
     }
 
-    // 현재 도시 이름을 사용해 좌표 가져오기 (Nominatim API)
+    console.log(`도시 이름: ${currentCity}`);  // 도시 이름이 제대로 들어왔는지 확인
+
+    // 현재 도시 이름을 사용해 좌표 가져오기
     const coordinates = await getCoordinates(currentCity);
 
     if (!coordinates) {
-      return res.status(404).json({ error: '좌표를 찾을 수 없습니다.' });
+      console.log(`Nominatim API에서 좌표를 찾지 못했습니다: ${currentCity}`);
+      return res.status(404).json({ error: '도시 좌표를 찾을 수 없습니다.' });
     }
+
+    console.log(`좌표 찾음: ${coordinates.latitude}, ${coordinates.longitude}`);
 
     // BL 정보와 좌표 정보를 함께 반환
     res.json({
