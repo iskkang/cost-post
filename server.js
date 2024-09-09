@@ -10,6 +10,22 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 
+// Tracing All (Fetch all records from tracing table)
+app.get('/api/tracing_all', async (req, res) => {
+  try {
+    const records = await fetchRecords('tracing', ''); // 필터 없이 모든 데이터를 가져오기
+
+    if (records.length === 0) {
+      return res.status(404).json({ error: 'tracing 테이블에 데이터가 없습니다.' });
+    }
+
+    res.json(records);
+  } catch (error) {
+    console.error('Tracing All API error:', error);
+    res.status(500).json({ error: 'Tracing 데이터를 가져오는 중 오류가 발생했습니다.' });
+  }
+});
+
 // Tracing by BL (Specific BL search)
 app.get('/api/tracing', async (req, res) => {
   const { BL } = req.query;
