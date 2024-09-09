@@ -10,44 +10,54 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 
-// Airtable 데이터 테스트 엔드포인트
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
+
+// 테스트용 /api/test 엔드포인트 추가 (데이터 조회 확인)
 app.get('/api/test', async (req, res) => {
   try {
-    // Airtable의 'tcr' 테이블에서 모든 데이터를 가져오는 테스트
+    // 필터링 없이 전체 데이터를 가져오는 예시
     const records = await fetchRecords('tcr', '');
-    res.json(records);  // 성공 시 데이터 반환
-  } catch (error) {
-    res.status(500).json({ error: 'Airtable API error' });
-  }
-});
 
-app.get('/api/tickets', async (req, res) => {
-  const { pol, pod, type } = req.query;
-  console.log('Received Query Parameters:', { pol, pod, type });
-  if (!pol || !pod || !type) {
-    console.log('Missing query parameters');
-    return res.status(400).json({ error: '모든 쿼리 파라미터(pol, pod, type)가 필요합니다.' });
-  }
-  const filterFormula = AND(
-    FIND(LOWER("${pol}"), LOWER({POL})) > 0,
-    FIND(LOWER("${pod}"), LOWER({POD})) > 0,
-    OR({Type} = "${type}", {Type} = ${type})
-  );
-  console.log('Filter formula:', filterFormula);
-  try {
-    console.log('Fetching records from Airtable...');
-    const records = await fetchRecords('tcr', filterFormula);
-    console.log('Records fetched:', records.length);
-    if (records.length === 0) {
-      console.log('No matching records found');
-      return res.status(404).json({ error: '해당 조건에 맞는 데이터가 없습니다.' });
-    }
     res.json(records);
   } catch (error) {
-    console.error('Airtable API error in tickets endpoint:', error);
+    console.error('Airtable API error:', error.message);
     res.status(500).json({ error: 'Airtable API 요청 중 오류가 발생했습니다.', details: error.message });
   }
 });
+
+app.get('/', (req, res) => {
+  res.send('접속 성공');
+});
+
+
+// /api/tickets 엔드포인트 추가
+app.get('/api/tickets', async (req, res) => {
+  const { pol, pod, type } = req.query;
+
+  // 쿼리 파라미터 로그 추가
+  console.log('Received Query Parameters:', { pol, pod, type });
+
+  // Airtable 필터 공식 (대소문자 구분 없이 검색)
+  const filterFormula = `AND(LOWER({POL}) = LOWER('${pol}'), LOWER({POD}) = LOWER('${pod}'), {Type} = '${type}')`;
+
+  try {
+    // Airtable 데이터 조회
+    const records = await fetchRecords('tcr', filterFormula);
+
+    // 데이터가 없을 경우 처리
+    if (records.length === 0) {
+      return res.status(404).json({ error: '해당 조건에 맞는 데이터가 없습니다.' });
+    }
+
+    // 조회된 데이터 반환
+    res.json(records);
+  } catch (error) {
+    console.error('Airtable API error:', error.message);
+    res.status(500).json({ error: 'Airtable API 요청 중 오류가 발생했습니다.', details: error.message });
+  }
+});
+
+
 app.get('/api/autocomplete', async (req, res) => {
   const { query, field } = req.query;
 
