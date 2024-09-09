@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const axios = require('axios'); // axios는 API 요청을 위해 필요합니다.
-const { fetchRecords } = require('./airtable/airtable');
+const { fetchRecords } = require('./airtable/airtable'); 
+const axios = require('axios');  // Axios 추가
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -91,15 +91,15 @@ app.get('/api/tracing', async (req, res) => {
     }
 
     const tracingData = records[0].fields;
-    const currentCity = tracingData['Current'];  // 현재 도시 이름 가져오기
+    const currentCity = tracingData['Current'];
 
-    if (!currentCity) {
-      return res.status(404).json({ error: '현재 위치 정보가 없습니다.' });
+    if (!currentCity || currentCity.trim() === "") {
+      return res.status(400).json({ error: 'Current 값이 없습니다.' });
     }
 
-    console.log(`도시 이름: ${currentCity}`);  // 도시 이름이 제대로 들어왔는지 확인
+    console.log(`도시 이름: ${currentCity}`);
 
-    // 현재 도시 이름을 사용해 좌표 가져오기
+    // Nominatim API를 사용해 좌표를 가져옴
     const coordinates = await getCoordinates(currentCity);
 
     if (!coordinates) {
@@ -122,7 +122,7 @@ app.get('/api/tracing', async (req, res) => {
       currentInfo: {
         Current: tracingData['Current'],
         Status: tracingData['Status'],
-        coordinates: coordinates   // 좌표 추가
+        coordinates: coordinates
       }
     });
   } catch (error) {
@@ -166,21 +166,18 @@ app.get('/api/tcr', async (req, res) => {
   }
 });
 
-// Nominatim을 통해 도시 좌표를 가져오는 함수
+// 도시 좌표 가져오기 (Nominatim API 사용)
 async function getCoordinates(cityName) {
   try {
-    const response = await axios.get(`https://nominatim.openstreetmap.org/search`, {
-      params: {
-        q: cityName,
-        format: 'json',
-        limit: 1
-      }
-    });
+    const cleanCityName = encodeURIComponent(cityName.trim()); // 도시 이름 정제 및 인코딩
+    const response = await axios.get(`https://nominatim.openstreetmap.org/search?q=${cleanCityName}&format=json&limit=1`);
 
     if (response.data && response.data.length > 0) {
       const { lat, lon } = response.data[0];
       return { latitude: parseFloat(lat), longitude: parseFloat(lon) };
     }
+
+    console.log(`도시 좌표를 찾지 못함: ${cityName}`);
     return null; // 좌표를 찾지 못한 경우
   } catch (error) {
     console.error('Nominatim API error:', error);
