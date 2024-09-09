@@ -153,11 +153,13 @@ app.get('/api/tcr', async (req, res) => {
 async function getCoordinates(cityName) {
   try {
     const response = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(cityName)}.json?access_token=${MAPBOX_TOKEN}`);
+    
     if (response.data.features && response.data.features.length > 0) {
       const [longitude, latitude] = response.data.features[0].geometry.coordinates;
       return { latitude, longitude };
     }
-    return null;
+    
+    return null; // 좌표를 찾지 못한 경우
   } catch (error) {
     console.error('Mapbox API error:', error);
     return null;
