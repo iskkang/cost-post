@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const Airtable = require('airtable');
+const jwt = require('jsonwebtoken'); // JWT 토큰 생성용
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ async function isEmailTaken(email) {
     filterByFormula: `Email = "${email}"`,
   }).firstPage();
   
-  return records.length > 0;  // 이메일이 존재하면 true 반환
+  return records.length > 0;
 }
 
 // 비밀번호 유효성 검사 함수
@@ -80,9 +81,9 @@ app.post('/register', async (req, res) => {
           Name: name,
           Email: email,
           Password: hashedPassword,
-          Company: company,  // 추가 필드
-          Tel: tel,          // 추가 필드
-          Address: address   // 추가 필드
+          Company: company,
+          Tel: tel,
+          Address: address
         },
       },
     ]);
@@ -93,6 +94,43 @@ app.post('/register', async (req, res) => {
     res.status(500).json({ message: "Server error", details: error.message });
   }
 });
+
+// 로그인 엔드포인트
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required." });
+  }
+
+  try {
+    // 이메일로 사용자 검색
+    const records = await base('Users').select({
+      filterByFormula: `Email = "${email}"`,
+    }).firstPage();
+
+    if (records.length === 0) {
+      return res.status(400).json({ message: "Invalid email or password." });
+    }
+
+    const user = records[0].fields;
+
+    // 비밀번호 비교
+    const isPasswordValid = await bcrypt.compare(password, user.Password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Invalid email or password." });
+    }
+
+    // JWT 토큰 생성 (로그인 성공 시)
+    const token = jwt.sign({ email: user.Email, name: user.Name }, SECRET_KEY, { expiresIn: '1h' });
+
+    res.status(200).json({ message: "Login successful", token });
+  } catch (error) {
+    console.error('Login API error:', error);
+    res.status(500).json({ message: "Server error", details: error.message });
+  }
+});
+
 
 
 // 테스트용 /api/test 엔드포인트 추가 (데이터 조회 확인)
