@@ -13,7 +13,7 @@
     "@mapbox/mapbox-sdk": "^0.13.4",
     "express": "^4.17.1",
     "dotenv": "^8.2.0",
-    "airtable": "^0.11.4"
+    "airtable": "^0.11.4",
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0"
   }
