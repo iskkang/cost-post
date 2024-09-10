@@ -3,12 +3,96 @@ const cors = require('cors');
 const { fetchRecords } = require('./airtable/airtable'); 
 const axios = require('axios');  // Axios 추가
 const dotenv = require('dotenv');
+const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
+const Airtable = require('airtable');
+
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
+
+// Airtable 설정
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
+
+// 미들웨어 설정
+app.use(cors());
+app.use(bodyParser.json());  // JSON 요청 본문 파싱
+
+// 이메일 중복 체크 함수
+async function isEmailTaken(email) {
+  const records = await base('Users').select({
+    filterByFormula: `Email = "${email}"`,
+  }).firstPage();
+  
+  return records.length > 0;  // 이메일이 존재하면 true 반환
+}
+
+// 비밀번호 유효성 검사 함수
+function validatePassword(password) {
+  const minLength = 8;
+  const hasNumber = /\d/;
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
+
+  if (password.length < minLength) {
+    return `Password must be at least ${minLength} characters long.`;
+  }
+  if (!hasNumber.test(password)) {
+    return "Password must contain at least one number.";
+  }
+  if (!hasSpecialChar.test(password)) {
+    return "Password must contain at least one special character.";
+  }
+  return null;
+}
+
+// 회원가입 엔드포인트
+app.post('/register', async (req, res) => {
+  const { name, email, password, company, tel, address } = req.body;
+
+  // 필수 필드 확인
+  if (!name || !email || !password || !company || !tel || !address) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    // 이메일 중복 체크
+    const emailExists = await isEmailTaken(email);
+    if (emailExists) {
+      return res.status(400).json({ message: "Email is already registered." });
+    }
+
+    // 비밀번호 유효성 검사
+    const passwordValidationError = validatePassword(password);
+    if (passwordValidationError) {
+      return res.status(400).json({ message: passwordValidationError });
+    }
+
+    // 비밀번호 해시화
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Airtable에 사용자 데이터 저장
+    await base('Users').create([
+      {
+        fields: {
+          Name: name,
+          Email: email,
+          Password: hashedPassword,
+          Company: company,  // 추가 필드
+          Tel: tel,          // 추가 필드
+          Address: address   // 추가 필드
+        },
+      },
+    ]);
+
+    res.status(201).json({ message: "User registered successfully" });
+  } catch (error) {
+    console.error('Register API error:', error);
+    res.status(500).json({ message: "Server error", details: error.message });
+  }
+});
 
 
 // 테스트용 /api/test 엔드포인트 추가 (데이터 조회 확인)
